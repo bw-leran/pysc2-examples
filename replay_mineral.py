@@ -63,8 +63,8 @@ FLAGS(sys.argv)
 
 flags.DEFINE_integer("parallel", 1, "How many instances to run in parallel.")
 flags.DEFINE_integer("step_mul", 8, "How many game steps per observation.")
-#flags.DEFINE_string("replays", "%s/replays/mineral1.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
-flags.DEFINE_string("replays", "%s/replays/test_game_replay3.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
+flags.DEFINE_string("replays", "%s/replays/mineral1.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
+#flags.DEFINE_string("replays", "%s/replays/test_game_replay3.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
 flags.mark_flag_as_required("replays")
 
 
