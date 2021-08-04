@@ -31,6 +31,15 @@ import six
 from six.moves import queue
 
 from pysc2 import run_configs
+from pysc2.run_configs.platforms import LocalBase #print statements here
+'''
+https://github.com/deepmind/pysc2/blob/master/pysc2/run_configs/lib.py#L178
+look in here
+put printlines to figure out how far it gets
+how do platforms.py and lib.py relate, start method not implemented
+
+*replace run_configs with Localbase
+'''
 from pysc2.lib import features
 from pysc2.lib import point
 from pysc2.lib import protocol
@@ -48,9 +57,14 @@ import json as json
 PROJ_DIR = os.path.dirname(os.path.abspath(__file__))
 
 FLAGS = flags.FLAGS
+
+#Added this line, seems to have fixed the parse error
+FLAGS(sys.argv)
+
 flags.DEFINE_integer("parallel", 1, "How many instances to run in parallel.")
 flags.DEFINE_integer("step_mul", 8, "How many game steps per observation.")
-flags.DEFINE_string("replays", "%s/replays/mineral1.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
+#flags.DEFINE_string("replays", "%s/replays/mineral1.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
+flags.DEFINE_string("replays", "%s/replays/test_game_replay3.SC2Replay" % PROJ_DIR, "Path to a directory of replays.")
 flags.mark_flag_as_required("replays")
 
 
@@ -188,7 +202,7 @@ class ReplayProcessor(multiprocessing.Process):
       self._print("Starting up a new SC2 instance.")
       self._update_stage("launch")
       try:
-        with self.run_config.start() as controller:
+        with self.run_config.start() as controller: #game not starting all the way
           self._print("SC2 Started successfully.")
           ping = controller.ping()
           for _ in range(300):
@@ -204,7 +218,7 @@ class ReplayProcessor(multiprocessing.Process):
               self._print("Got replay: %s" % replay_path)
               self._update_stage("open replay file")
               replay_data = self.run_config.replay_data(replay_path)
-              self._update_stage("replay_info")
+              self._update_stage("replay_info") #got here
               info = controller.replay_info(replay_data)
               self._print((" Replay Info %s " % replay_name).center(60, "-"))
               self._print(info)
@@ -232,6 +246,7 @@ class ReplayProcessor(multiprocessing.Process):
           self._update_stage("shutdown")
       except (protocol.ConnectionError, protocol.ProtocolError,
               remote_controller.RequestError):
+        print('replay crashes')
         self.stats.replay_stats.crashing_replays.add(replay_name)
       except KeyboardInterrupt:
         return
@@ -363,7 +378,7 @@ def stats_printer(stats_queue):
   proc_stats = [ProcessStats(i) for i in range(FLAGS.parallel)]
   print_time = start_time = time.time()
   width = 107
-  filename = "trajectories/mineral1.json"
+  filename = "trajectories/mineral1.json" #I added this directory and json file
   with open(filename, 'w') as f:
     running = True
     while running:
@@ -406,6 +421,7 @@ def replay_queue_filler(replay_queue, replay_list):
 
 def main(unused_argv):
   """Dump stats about all the actions that are in use in a set of replays."""
+  #run_config = LocalBase #need a get
   run_config = run_configs.get()
 
   if not gfile.Exists(FLAGS.replays):
@@ -430,6 +446,7 @@ def main(unused_argv):
     replay_queue_thread.start()
 
     for i in range(FLAGS.parallel):
+      #p = ReplayProcessor(i, LocalBase, replay_queue, stats_queue)
       p = ReplayProcessor(i, run_config, replay_queue, stats_queue)
       p.daemon = True
       p.start()
